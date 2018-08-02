@@ -41,13 +41,15 @@ Private StammdatenXLSXdata() As StammdatenStruc
 
 Private XLSXmax As Integer
 
-
-Private Sub MainDataImport()
-Call ImportDaten
-Call WriteXLSXDaten
-Call CloseXLSXApp(True)
-End Sub
-
+'##############################################################################
+'##############################################################################
+Private Sub MainDataImport()             '#####################################
+Call ImportDaten                         '#####################################
+Call WriteXLSXDaten                      '#####################################
+Call CloseXLSXApp(True)                  '#####################################
+End Sub                                  '#####################################
+'##############################################################################
+'##############################################################################
 
 Private Sub ImportDaten()
 Dim xlpfad As String
@@ -155,7 +157,7 @@ Dim sSQLStNr As String
 Dim sSQLKst As String
 Dim sSqlMitGrp As String
 
-Dim abtID As Long, grpID As Long, kreisID As Long, mitID As Long, reID As Long, StammNrID, kstID
+Dim abtID As Long, grpID As Long, kreisID As Long, mitID As Long, reID As Long, StammNrID As Long, kstID As Long
 Dim MsgAntw As Integer
 ' Schleife über alle Datensätze in der Variablen
 For i = 1 To XLSXmax
@@ -177,79 +179,113 @@ For i = 1 To XLSXmax
     DoCmd.SetWarnings False
 
 
-'1.######################################## tblMitKreis #################################################
+'1.######################################## tblMitKreis #########################################
     If kreisID = 0 Then
+    
         sSQLKreis = "INSERT INTO tblMitKreis (MitKreis ) VALUES ('" & MitKreisXLSXdata(i).mitKreis & "');"
+        
         DoCmd.RunSQL sSQLKreis
+        
         kreisID = Nz(DLookup("MitKrID", "tblMitKreis", "MitKreis= '" & MitKreisXLSXdata(i).mitKreis & "'"))
 
     End If
 
-'2.######################################## tblfzgGrp #################################################
+'2.######################################## tblfzgGrp ########################################
     If grpID = 0 Then
+    
         sSQLGrp = "INSERT INTO tblFzgGrp (FzgGrp) VALUES ('" & FzgGrpXLSXdata(i).fzgGrp & "');"
+        
         DoCmd.RunSQL sSQLGrp
+        
         grpID = Nz(DLookup("FzgGrpID", "tblFzgGrp", "FzgGrp= '" & FzgGrpXLSXdata(i).fzgGrp & "'"))
         
     End If
-'3.######################################## tblRE #################################################
+'3.######################################## tblRE ############################################
+
     If reID = 0 Then
+    
         sSQLKreis = "INSERT INTO tblRechtseinheit (RE ) VALUES ('" & StammdatenXLSXdata(i).re & "');"
+        
         DoCmd.RunSQL sSQLKreis
+        
         reID = Nz(DLookup("REID", "tblRechtseinheit", "RE= '" & StammdatenXLSXdata(i).re & "'"))
 
     End If
 
 
-'3.######################################## tblAbteilung #################################################
+'3.######################################## tblAbteilung ####################################
+
     If abtID = 0 Then
-     sSQLAbt = "INSERT INTO tblAbteilung (OrgEh ) VALUES ('" & AbtXLSXdata(i).kuerzel & "');"
-        DoCmd.RunSQL sSQLAbt
-     abtID = Nz(DLookup("AbtID", "tblAbteilung", "OrgEh= '" & AbtXLSXdata(i).kuerzel & "'"))
+    
+         sSQLAbt = "INSERT INTO tblAbteilung (OrgEh ) VALUES ('" & AbtXLSXdata(i).kuerzel & "');"
+
+         DoCmd.RunSQL sSQLAbt
+
+         abtID = Nz(DLookup("AbtID", "tblAbteilung", "OrgEh= '" & AbtXLSXdata(i).kuerzel & "'"))
+
     End If
 
 
-'4.######################################## tblMitarbeiter #################################################
+'4.######################################## tblMitarbeiter #################################
+
      ' Abteilungskuerzel mit den Schlüsselwerten in Variablen ersetzen
+     
     If mitID = 0 Then
+    
          sSQLMit = "INSERT INTO tblMitarbeiter (MitKreisID, Nachname, Vorname, DKXKennung, Email)VALUES(" & kreisID & ", '" & _
          StammdatenXLSXdata(i).nachname & "','" & StammdatenXLSXdata(i).vorname & "','" & StammdatenXLSXdata(i).dKXKennung & _
          "', '" & StammdatenXLSXdata(i).email & "');"
+         
         Debug.Print sSQLMit
+        
         DoCmd.RunSQL sSQLMit
+        
         mitID = Nz(DLookup("MitID", "tblMitarbeiter", "DKXKennung= '" & StammdatenXLSXdata(i).dKXKennung & "'"))
         
     End If
 
-'5.######################################## tblVerkMitGrp #################################################
+'5.######################################## tblVerkMitGrp ######################################
     
     If IsNull(DLookup("MitID", "tblVerknuepftMit_FzgGrp", "MitID=" & mitID & " AND FzgGrpID= " & grpID)) Then
+    
         sSQLMit = "INSERT INTO tblVerknuepftMit_FzgGrp (MitID,FzgGrpID,Datum) VALUES (" _
         & mitID & "," & grpID & ", '#" & Date & "#');"
+        
         Debug.Print sSQLMit
+        
         DoCmd.RunSQL sSQLMit
+        
     End If
 
-'6######################################## tblKostenstelle #################################################
+'6######################################## tblKostenstelle #################################
 
     If kstID = 0 Then
+    
         sSQLKst = "INSERT INTO tblKostenstelle (AbtID, Kostenstelle) " & _
         "VALUES (" & abtID & ", '" & StammdatenXLSXdata(i).kstelle & "');"
         DoCmd.RunSQL sSQLKst
+        
         kstID = Nz(DLookup("KstID", "tblKostenstelle", "Kostenstelle= '" & StammdatenXLSXdata(i).kstelle & "'"), 0)
+        
         Debug.Print sSQLKst
     End If
 
 
-'7######################################## tblStammnummer #################################################
+'7######################################## tblStammnummer ##################################
 
     If StammNrID = 0 Then
-        sSQLStNr = "INSERT INTO tblStammnummer (StammNr, ReID, KstID, MitID) " & _
+    
+        sSQLStNr = "INSERT INTO tblStammnummer (StammNr, REID, KstID, MitID) " & _
         "VALUES (" & StammdatenXLSXdata(i).stammNr & ", " & reID & ", " & kstID & "," & mitID & ");"
+        
         Debug.Print sSQLStNr
+        
         DoCmd.RunSQL sSQLStNr
+        
     End If
+    
 DoCmd.SetWarnings True
+
 Next i
 
 '###############################Feststellungen und Vorschläge ################################################
@@ -286,268 +322,6 @@ On Error GoTo 0
         MsgAntw = MsgBox("Die Excel-Instanz wurde beendet.", vbInformation, "Excel-Instanz beenden")
     End If
 End Sub
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
