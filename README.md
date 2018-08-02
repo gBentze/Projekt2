@@ -43,11 +43,16 @@ Private XLSXmax As Integer
 
 '##############################################################################
 '##############################################################################
-Private Sub MainDataImport()             '#####################################
-Call ImportDaten                         '#####################################
-Call WriteXLSXDaten                      '#####################################
-Call CloseXLSXApp(True)                  '#####################################
-End Sub                                  '#####################################
+
+Private Sub MainDataImport()             
+
+    Call ImportDaten                        
+    Call WriteXLSXDaten                      
+    Call CloseXLSXApp(True)     
+    
+End Sub   
+
+'#####################################
 '##############################################################################
 '##############################################################################
 
@@ -180,6 +185,7 @@ For i = 1 To XLSXmax
 
 
 '1.######################################## tblMitKreis #########################################
+
     If kreisID = 0 Then
     
         sSQLKreis = "INSERT INTO tblMitKreis (MitKreis ) VALUES ('" & MitKreisXLSXdata(i).mitKreis & "');"
@@ -191,6 +197,7 @@ For i = 1 To XLSXmax
     End If
 
 '2.######################################## tblfzgGrp ########################################
+
     If grpID = 0 Then
     
         sSQLGrp = "INSERT INTO tblFzgGrp (FzgGrp) VALUES ('" & FzgGrpXLSXdata(i).fzgGrp & "');"
@@ -289,6 +296,7 @@ DoCmd.SetWarnings True
 Next i
 
 '###############################Feststellungen und Vorschläge ################################################
+
     'eine Kostenstelle kann mehrere Abteilungen haben und eine Abteilung kann mehrere Kostenstellen haben.
     'also m:n Beziehung
 
