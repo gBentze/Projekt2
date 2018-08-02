@@ -1,8 +1,8 @@
-# Projekt2
+
 Option Compare Database
 
 'Tabelle Abteilung, Mitkreis, typeFzgGrp
-Const dateipfad = "S:\VDG-VFD\Laure\LaureDokumente\Praktikum\MeineAufgaben\Abschlussarbeitsphase\ProjektAccessDashboard\Daten"
+Const dateipfad = "D:\DantenbankAccess"
 Const xlBlattName As String = "Tabelle1"
 
 Private Type typeAbteilung
@@ -41,9 +41,17 @@ Private StammdatenXLSXdata() As StammdatenStruc
 
 Private XLSXmax As Integer
 
+
+Private Sub MainDataImport()
+Call ImportDaten
+Call WriteXLSXDaten
+Call CloseXLSXApp(True)
+End Sub
+
+
 Private Sub ImportDaten()
 Dim xlpfad As String
-xlpfad = dateipfad & "\MA-Liste.xlsx"
+xlpfad = dateipfad & "\Stammdaten.xlsx"
 Dim vKuerzel As Variant, vMitKreis, vFzgGrp
 Dim vDKXKennung As Variant, vNachname, vVorname, vEmail, vRE, vStammNr, vKostenstelle
 
@@ -93,12 +101,12 @@ xlsApp.Workbooks.Open xlpfad, , True
     'Abteilung
     sCol = "F"
     vKuerzel = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
-    'Kostenstelle
+    ' Rechtseinheit
     sCol = "G"
-    vKostenstelle = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
-    'Rechtseinheit
-    sCol = "H"
     vRE = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    'Kostenstelle
+    sCol = "H"
+    vKostenstelle = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
     'Mitarbeiterkreis
     sCol = "J"
     vMitKreis = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
@@ -116,9 +124,6 @@ xlsApp.Workbooks.Open xlpfad, , True
     
     With xlsApp.Worksheets(xlBlattName)
         For i = 1 To XLSXmax
-            Debug.Print .Cells(i, 1)
-            Debug.Print .Cells(i, 2)
-            
             AbtXLSXdata(i).kuerzel = vKuerzel(i, 1)
             MitKreisXLSXdata(i).mitKreis = vMitKreis(i, 1)
             FzgGrpXLSXdata(i).fzgGrp = vFzgGrp(i, 1)
@@ -126,7 +131,6 @@ xlsApp.Workbooks.Open xlpfad, , True
             StammdatenXLSXdata(i).email = vEmail(i, 1)
             StammdatenXLSXdata(i).nachname = vNachname(i, 1)
             StammdatenXLSXdata(i).vorname = vVorname(i, 1)
-            'StammdatenXLSXdata(i).mitKreis = vMitKreis(i, 1)
             StammdatenXLSXdata(i).re = vRE(i, 1)
             StammdatenXLSXdata(i).kstelle = vKostenstelle(i, 1)
             StammdatenXLSXdata(i).stammNr = vStammNr(i, 1)
@@ -188,6 +192,14 @@ For i = 1 To XLSXmax
         grpID = Nz(DLookup("FzgGrpID", "tblFzgGrp", "FzgGrp= '" & FzgGrpXLSXdata(i).fzgGrp & "'"))
         
     End If
+'3.######################################## tblRE #################################################
+    If reID = 0 Then
+        sSQLKreis = "INSERT INTO tblRechtseinheit (RE ) VALUES ('" & StammdatenXLSXdata(i).re & "');"
+        DoCmd.RunSQL sSQLKreis
+        reID = Nz(DLookup("REID", "tblRechtseinheit", "RE= '" & StammdatenXLSXdata(i).re & "'"))
+
+    End If
+
 
 '3.######################################## tblAbteilung #################################################
     If abtID = 0 Then
@@ -200,9 +212,9 @@ For i = 1 To XLSXmax
 '4.######################################## tblMitarbeiter #################################################
      ' Abteilungskuerzel mit den Schlüsselwerten in Variablen ersetzen
     If mitID = 0 Then
-         sSQLMit = "INSERT INTO tblMitarbeiter (MitKreisID, Nachname, Vorname, DKXKennung, Email)VALUES(" & StammdatenXLSXdata(i).lngMitKreis & ", '" & _
-         StammdatenXLSXdata(i).nachname & "','" & StammdatenXLSXdata(i).vorname & "','" & StammdatenXLSXdata(i).dKXKennung & "', " & _
-         kreisID & ");"
+         sSQLMit = "INSERT INTO tblMitarbeiter (MitKreisID, Nachname, Vorname, DKXKennung, Email)VALUES(" & kreisID & ", '" & _
+         StammdatenXLSXdata(i).nachname & "','" & StammdatenXLSXdata(i).vorname & "','" & StammdatenXLSXdata(i).dKXKennung & _
+         "', '" & StammdatenXLSXdata(i).email & "');"
         Debug.Print sSQLMit
         DoCmd.RunSQL sSQLMit
         mitID = Nz(DLookup("MitID", "tblMitarbeiter", "DKXKennung= '" & StammdatenXLSXdata(i).dKXKennung & "'"))
@@ -222,7 +234,7 @@ For i = 1 To XLSXmax
 
     If kstID = 0 Then
         sSQLKst = "INSERT INTO tblKostenstelle (AbtID, Kostenstelle) " & _
-        "VALUES ('" & StammdatenXLSXdata(i).kstelle & "', " & abtID & ");"
+        "VALUES (" & abtID & ", '" & StammdatenXLSXdata(i).kstelle & "');"
         DoCmd.RunSQL sSQLKst
         kstID = Nz(DLookup("KstID", "tblKostenstelle", "Kostenstelle= '" & StammdatenXLSXdata(i).kstelle & "'"), 0)
         Debug.Print sSQLKst
@@ -239,64 +251,41 @@ For i = 1 To XLSXmax
     End If
 DoCmd.SetWarnings True
 Next i
+
 '###############################Feststellungen und Vorschläge ################################################
     'eine Kostenstelle kann mehrere Abteilungen haben und eine Abteilung kann mehrere Kostenstellen haben.
     'also m:n Beziehung
 
 End Sub
 
-Private Sub test()
-Call ImportDaten
-Call WriteXLSXDaten
+Public Sub CloseXLSXApp(bShowInfo As Boolean)
+''' Excel-Instanz beenden
+' Verweis auf Excel-Bibliothek muss gesetzt sein
+Dim xlsApp As Excel.Application
+Dim MsgAntw As Integer
+
+' Excel-Instanz suchen
+  On Error Resume Next
+    Set xlsApp = GetObject(, "Excel.Aplication")
+    If xlsApp Is Nothing Then
+        ' keine Excel-Instanz vorhanden
+        ' Meldung
+        If bShowInfo Then
+            MsgAntw = MsgBox("Es wurde keine Excel-Instanz gefunden.", vbInformation, "Excel-Instanz beenden")
+        End If
+        ' Ende
+        Exit Sub
+    End If
+
+On Error GoTo 0
+    ' Excel schließen und resetten
+    xlsApp.Quit
+    Set xlsApp = Nothing
+    ' Meldung
+    If bShowInfo Then
+        MsgAntw = MsgBox("Die Excel-Instanz wurde beendet.", vbInformation, "Excel-Instanz beenden")
+    End If
 End Sub
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
