@@ -90,35 +90,64 @@ xlsApp.Workbooks.Open xlpfad, , True
     iRowL = xlsApp.Worksheets(xlBlattName).Cells(xlsApp.Rows.Count, 1).End(xlUp).Row
                     
     ' Spalte mit Kuerzel einlesen
+    
     'Stammnummer
     sCol = "A"
+    
     vStammNr = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     'Nachname
+    
     sCol = "B"
+    
     vNachname = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     'Vorname
+    
     sCol = "C"
+    
     vVorname = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     'DKX-Kennung
+    
     sCol = "D"
+    
     vDKXKennung = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     'Email
+    
     sCol = "E"
+    
     vEmail = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     'Abteilung
+    
     sCol = "F"
+    
     vKuerzel = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     ' Rechtseinheit
+    
     sCol = "G"
+    
     vRE = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     'Kostenstelle
+    
     sCol = "H"
+    
     vKostenstelle = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     'Mitarbeiterkreis
+    
     sCol = "J"
+    
     vMitKreis = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
+    
     'FzgGrp
+    
     sCol = "M"
+    
     vFzgGrp = xlsApp.Worksheets(xlBlattName).Range(sCol & iRowS & ":" & sCol & iRowL)
 
     '--------------------
@@ -165,22 +194,25 @@ Dim sSqlMitGrp As String
 Dim abtID As Long, grpID As Long, kreisID As Long, mitID As Long, reID As Long, StammNrID As Long, kstID As Long
 Dim MsgAntw As Integer
 ' Schleife über alle Datensätze in der Variablen
+
 For i = 1 To XLSXmax
+    
     ' SQL-String erstellen und Daten schreiben
+    
     reID = Nz(DLookup("REID", "tblRechtseinheit", "RE = '" & StammdatenXLSXdata(i).re & "'"), 0)
+    
     StammNrID = Nz(DLookup("StammNrID", "tblStammnummer", "StammNr = " & StammdatenXLSXdata(i).stammNr), 0)
+    
     kstID = Nz(DLookup("KstID", "tblKostenstelle", "Kostenstelle = '" & StammdatenXLSXdata(i).kstelle & "'"), 0)
     
     abtID = Nz(DLookup("AbtID", "tblAbteilung", "OrgEh= '" & AbtXLSXdata(i).kuerzel & "'"), 0)
+    
     kreisID = Nz(DLookup("MitKrID", "tblMitKreis", "MitKreis= '" & MitKreisXLSXdata(i).mitKreis & "'"), 0)
+    
     grpID = Nz(DLookup("FzgGrpID", "tblFzgGrp", "FzgGrp= '" & FzgGrpXLSXdata(i).fzgGrp & "'"), 0)
+    
     mitID = Nz(DLookup("MitID", "tblMitarbeiter", "DKXKennung= '" & StammdatenXLSXdata(i).dKXKennung & "'"), 0)
-    
-    
-'    Debug.Print sSQLAbt
-'    Debug.Print sSQLKreis
-'    Debug.Print sSQLGrp
-    
+
     DoCmd.SetWarnings False
 
 
