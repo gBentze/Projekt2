@@ -176,7 +176,6 @@ xlsApp.Workbooks.Open xlpfad, , True
 
 Set xlsApp = Nothing
 
-
 End Sub
 
 Private Sub WriteXLSXDaten()
@@ -361,6 +360,224 @@ On Error GoTo 0
     If bShowInfo Then
         MsgAntw = MsgBox("Die Excel-Instanz wurde beendet.", vbInformation, "Excel-Instanz beenden")
     End If
+End Sub
+
+###############################################################################################################################
+##############################################################################################################################
+
+Option Compare Database
+Option Explicit
+
+Private Sub cboUsername_AfterUpdate()
+  Me.txtPassword.SetFocus
+End Sub
+
+
+Sub versteckePasswort()
+  DoCmd.OpenForm "LoginForm"
+ 
+  With Forms("LoginForm")
+    .txtPassword.InputMask = "Password"
+  End With
+End Sub
+
+Sub fuelleKombinationsfeld()
+  Dim strSql As String
+DoCmd.OpenForm "LoginForm"
+strSql = "SELECT tblBenutzer.bzrLogin, tblBenutzer.bzrPass FROM tblBenutzer;"
+With Forms("LoginForm").cboUsername
+    .RowSource = strSql
+    .ColumnCount = 1
+  End With
+End Sub
+
+Private Sub cmd_close_Click()
+ DoCmd.Close 'Schließt das Login-Formular
+ DoCmd.Quit 'Schließt die komplette Access-Umgebung
+End Sub
+End Sub
+
+Private Sub cmd_login_Click()
+
+Dim logID As Long
+Dim strCboPass As String
+Dim strPass As String
+Dim username As String
+
+On Error GoTo Error_Handler
+
+If Len(Trim(Me.txtPassword)) > 0 Then
+  strCboPass = Me.cboUsername.Column(1)
+  strPass = Me.txtPassword.Value
+  username = Me.cboUsername
+
+  If strCboPass = strPass Then
+   DoCmd.Close acForm, Me.Name
+  Else
+   'Me.lblStatus.Visible = True
+   With Me.txtPassword
+    .Value = vbNullString
+    .SetFocus
+   End With
+  End If
+ ElseIf Len(Trim(Me.txtPassword)) = 0 Then
+  MsgBox "Sie haben Ihr Passwort nicht eingegeben", vbInformation, "Passwort eingeben, bitte!"
+ End If
+
+Exit_Procedure:
+ DoCmd.SetWarnings True
+ Exit Sub
+
+Error_Handler:
+If IsNull(Me.cboUsername) Then
+  MsgBox ("Sie haben Ihren Benutzernamen nicht eingegeben")
+ Else
+  MsgBox (Me.cboUsername.Value & " ist kein berechtigter Benutzer")
+ End If
+ Me.cboUsername.Value = vbNullString 'Null
+ Me.cboUsername.SetFocus
+ Me.txtPassword.Value = vbNullString
+ Resume Exit_Procedure
+End Sub
+
+
+Private Sub Form_Load()
+Call versteckePasswort
+Call fuelleKombinationsfeld
+
+End Sub
+
+#############################################################################################################################
+#############################################################################################################################
+Option Compare Database
+Option Explicit
+
+Sub tabelleAnlegen()
+    Dim qdf As DAO.QueryDef
+    Dim db As DAO.Database
+    Dim strSql As String
+ 
+    'Sql Anweisung
+    strSql = "CREATE TABLE tblBenutzer(" & _
+             "bzrIdPk Autoincrement " & _
+             "Constraint PrimaryKey PRIMARY KEY, " & _
+             "bzrName Text(55), " & _
+             "bzrVorname Text(50), " & _
+             "bzrLogin Text(50), " & _
+             "bzrPass Text(50))"
+    Debug.Print strSql
+    'Fehlerbehandlung
+    On Error GoTo Fehler_Behandlung
+ 
+    'Tabelle anlegen
+    Set db = CurrentDb()
+    db.Execute strSql
+ 
+    MsgBox "tblBenutzer wurde angelegt!"
+ExitSub:
+    Set qdf = Nothing
+    Set db = Nothing
+    Exit Sub
+ 
+Fehler_Behandlung:
+    MsgBox "tblBenutzer konnte nicht angelegt werden!"
+    Resume ExitSub
+End Sub
+
+#############################################################################################################################
+#############################################################################################################################
+
+Option Compare Database
+Option Explicit
+
+Sub FormularErstellen()
+ Dim frm As Form
+ Dim ctlLabel_Text As Control
+ Dim ctlLabel_Kombi As Control
+ Dim ctlText As Control
+ Dim ctlKombi As Control
+ Dim ctlButon1 As Control
+ Dim ctlButon2 As Control
+ Dim ctlRahmen As Control
+ Dim formName As String
+ 
+ ' Konstanten zur Positionierung der Controls auf dem Formular
+ Const ctlBreite As Integer = 1450
+ Const ctlMargeWaagerecht As Integer = 1500
+ Const ctlMargeSenkrecht As Integer = 400
+ Const ctlHoehe As Integer = 350
+ Const waagerecht As Integer = 3000
+ Const senkrecht As Integer = 2000
+ 
+'Fehlerbehandlung
+On Error Resume Next
+ 
+ ' Ein neues Formular erstellen
+ Set frm = CreateForm
+ formName = frm.Name
+ 
+ 'Rahmen erstellen
+ Set ctlRahmen = CreateControl(frm.Name, acRectangle, , , , 100, 150, 8500, 5000)
+ ' ungebundene TextBox im DetailBereich erstellen
+ 
+'Kombinationsfeld für den Benutzernamen
+ Set ctlKombi = CreateControl(frm.Name, acComboBox, acDetail, , , _
+ waagerecht + ctlMargeWaagerecht, senkrecht, ctlBreite + 100, ctlHoehe)
+ ctlKombi.Name = "cboUsername"
+ 
+ 'Label wird Am Kombinationsfeld gebunden
+ Set ctlLabel_Kombi = CreateControl(frm.Name, acLabel, acDetail, _
+ ctlKombi.Name, "Benutzername", waagerecht, senkrecht, ctlBreite, ctlHoehe)
+ 
+'Textfeld fürs Passwort
+ Set ctlText = CreateControl(frm.Name, acTextBox, acDetail, "", "", _
+ waagerecht + ctlMargeWaagerecht, senkrecht + ctlMargeSenkrecht, ctlBreite + 100, ctlHoehe)
+ ctlText.Name = "txtPassword"
+ 
+ 'Label wird am TextFeld  gebunden
+ Set ctlLabel_Text = CreateControl(frm.Name, acLabel, acDetail, _
+ ctlText.Name, , waagerecht, senkrecht + ctlMargeSenkrecht, ctlBreite, ctlHoehe)
+ ctlLabel_Text.Caption = "Passwort"
+ 
+'Buton zum Schliessen des Formulars
+ Set ctlButon1 = CreateControl(frm.Name, acCommandButton, acDetail, , , _
+ waagerecht, senkrecht + ctlMargeSenkrecht * 3, ctlBreite, ctlHoehe)
+ ctlButon1.Name = "cmd_close"
+ ctlButon1.Caption = "Abbrechen"
+ 
+'Buton zum Einlogen
+ Set ctlButon2 = CreateControl(frm.Name, acCommandButton, acDetail, , , _
+ waagerecht + ctlMargeWaagerecht, senkrecht + ctlMargeSenkrecht * 3, ctlBreite, ctlHoehe)
+ ctlButon2.Caption = "Einloggen"
+ ctlButon2.Name = "cmd_login"
+ 
+ ' rufe Funktion zur Formatierung des Formulars auf
+ Call formularFormatieren(frm)
+ DoCmd.Restore
+ 
+ 'Formular wird umbennant
+ DoCmd.Close acForm, formName, acSaveYes
+ DoCmd.SelectObject acForm, formName, True
+ DoCmd.Rename "LoginForm", acForm, formName
+ 
+ 'Formular wird normal geöffnet
+ DoCmd.OpenForm "LoginForm", acNormal
+ Set frm = Nothing
+End Sub
+
+Sub formularFormatieren(frm As Form)
+ On Error Resume Next
+   With frm
+     .Detail.Height = 5200
+     .BorderStyle = acDialog
+     .PopUp = True
+     .Modal = True
+     .ScrollBars = 0
+     .RecordSelectors = False
+     .NavigationButtons = False
+     .Detail.BackColor = 14741230
+     .Caption = "Loggen Sie sich bitte ein!"
+ End With
 End Sub
 
 
